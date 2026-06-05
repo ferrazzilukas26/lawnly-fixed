@@ -3030,7 +3030,7 @@ function calcWaterBalance({wxData,gardenData,soilData,persistTheta=true}){
       drainMm: t.drainMm
     }));
     window.__LAWNLY_DEBUG.waterModel = {
-      modelVersion: 'vwc-unified-v9.1',
+      modelVersion: 'vwc-unified-v9.2',
       patchedAt: new Date().toISOString(),
       timestamp: new Date().toISOString(),
       thetaSource, confidence: thetaConfidence,
@@ -3156,7 +3156,7 @@ function calcWaterBalance({wxData,gardenData,soilData,persistTheta=true}){
       availMm:  parseFloat(availMm.toFixed(1)),
       Kc:       Kcb,
       grassType, soilType,
-      modelVersion: 'vwc-unified-v9.1',
+      modelVersion: 'vwc-unified-v9.2',
       phenoStage,
       Zr: lp.root.depth,
       cumBalance: parseFloat(cumBalance.toFixed(2)),
@@ -4412,7 +4412,10 @@ function DiagnosisStep({form,zones,onComplete}){
     <button class="btn btn-p btn-block" style="padding:14px;font-size:14px" onClick=${analyze} disabled=${!canAnalyze}>
       🔬 Genera Piano — Analisi agronomica 12 mesi
     </button>
-    ${!canAnalyze?html`<p style="font-size:10px;color:var(--muted);text-align:center;margin-top:6px">Seleziona irrigazione e livello manutenzione per continuare</p>`:''}
+    ${!canAnalyze?html`<div style="font-size:11px;color:#c0392b;text-align:center;margin-top:8px;padding:8px 12px;background:rgba(192,57,43,.06);border:1px solid rgba(192,57,43,.15);border-radius:.7rem;line-height:1.4">
+      ⚠ Mancano: ${!irr?'sistema di irrigazione':''} ${!irr&&!mnt?' + ':''} ${!mnt?'livello manutenzione':''}<br/>
+      <span style="font-size:10px;color:var(--muted)">Seleziona le voci marcate <b>A — RICHIESTO</b> qui sopra</span>
+    </div>`:''}
   </div>`;
 }
 
@@ -4501,6 +4504,17 @@ function OnboardingWizard({onComplete}){
     if(step===5)return Boolean(form.audienceLevel&&AUDIENCE_RANK.hasOwnProperty(form.audienceLevel));
     if(step===6)return false;
     return true;
+  };
+  /* PATCH v9.2 — spiega perché Avanti è disabilitato */
+  const canNextHint=()=>{
+    if(step===1){
+      if(!form.gardenName.trim())return 'Inserisci il nome del giardino';
+      if((Number(form.totalArea)||0)<10)return 'Area minima: 10 m²';
+    }
+    if(step===2)return 'Seleziona la posizione GPS del tuo giardino';
+    if(step===4)return 'Ogni zona deve avere area ≥ 1 m²';
+    if(step===5)return 'Seleziona il tuo livello di esperienza';
+    return '';
   };
   const next=()=>{if(step<OB_STEPS.length-1)setStep(s=>s+1);};
   const prev=()=>setStep(s=>s-1);
@@ -4620,7 +4634,12 @@ function OnboardingWizard({onComplete}){
       <div class="ob-footer">
         <button class="btn btn-ghost" onClick=${prev} disabled=${step===0} style="padding:9px 15px">‹ Indietro</button>
         <span class="ob-step-count">${step+1} / ${OB_STEPS.length}</span>
-        ${step<OB_STEPS.length-1?html`<button class="btn btn-p" onClick=${next} disabled=${!canNext()} style="padding:9px 18px">Avanti ›</button>`:html`<div style="padding:9px 18px;font-size:13px;color:var(--muted);opacity:.4">Avanti ›</div>`}
+        ${step<OB_STEPS.length-1?html`<div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+          <button class="btn btn-p" onClick=${next} disabled=${!canNext()} title=${!canNext()&&canNextHint()?canNextHint():''} style="padding:9px 18px">Avanti ›</button>
+          ${!canNext()&&canNextHint()?html`<span style="font-size:10px;color:#c0392b;max-width:160px;text-align:right;line-height:1.3">⚠ ${canNextHint()}</span>`:''}
+        </div>`:html`<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+          <div style="padding:9px 14px;font-size:12px;color:var(--green);font-weight:600;background:rgba(45,106,79,.07);border-radius:.7rem;line-height:1.25;text-align:right">↓ Scorri e premi<br/><b>Genera Piano</b></div>
+        </div>`}
       </div>
     </div>
   </div>`;
@@ -8849,6 +8868,9 @@ Non consigliare prodotti fuori da questa lista salvo richiesta esplicita dell'ut
         <div style="font-size:36px;margin-bottom:6px">🌿</div>
         <div style="font-size:15px;font-weight:700;margin-bottom:3px">Dottor Verde</div>
         <div style="font-size:11px;color:var(--muted);line-height:1.5">Agronomo specializzato · Risponde con i tuoi dati reali<br/>GDD ${gdd} · ${phase.e} ${phase.n} · S.${cw}</div>
+        <div style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;padding:2px 8px;background:rgba(45,106,79,.08);border-radius:99px;font-size:10px;color:var(--green);font-weight:600">
+          <span>🤖</span><span>Claude Haiku 4.5</span>
+        </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px">
         ${QP.map(([icon,label,prompt],i)=>html`<button key=${i} onClick=${()=>{setInp(prompt);send(prompt);}}
