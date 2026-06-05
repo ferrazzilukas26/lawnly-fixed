@@ -3030,7 +3030,7 @@ function calcWaterBalance({wxData,gardenData,soilData,persistTheta=true}){
       drainMm: t.drainMm
     }));
     window.__LAWNLY_DEBUG.waterModel = {
-      modelVersion: 'vwc-unified-v9.0',
+      modelVersion: 'vwc-unified-v9.1',
       patchedAt: new Date().toISOString(),
       timestamp: new Date().toISOString(),
       thetaSource, confidence: thetaConfidence,
@@ -3156,7 +3156,7 @@ function calcWaterBalance({wxData,gardenData,soilData,persistTheta=true}){
       availMm:  parseFloat(availMm.toFixed(1)),
       Kc:       Kcb,
       grassType, soilType,
-      modelVersion: 'vwc-unified-v9.0',
+      modelVersion: 'vwc-unified-v9.1',
       phenoStage,
       Zr: lp.root.depth,
       cumBalance: parseFloat(cumBalance.toFixed(2)),
@@ -3855,6 +3855,7 @@ const Spin=({green})=>html`<span class=${green?'spinner spinner-g':'spinner'}></
 function AuthScreen({onAuth}){
   const [mode,setMode]=useState('login');
   const [email,setEmail]=useState('');const [pass,setPass]=useState('');const [pass2,setPass2]=useState('');
+  const [showPass,setShowPass]=useState(false);const [showPass2,setShowPass2]=useState(false);
   const [loading,setLoading]=useState(false);const [err,setErr]=useState('');const [info,setInfo]=useState('');
 
   const submit=async()=>{
@@ -3870,7 +3871,7 @@ function AuthScreen({onAuth}){
     try{
       let res;
       if(mode==='login'){res=await supa.auth.signInWithPassword({email:email.trim(),password:pass});}
-      else{res=await supa.auth.signUp({email:email.trim(),password:pass});}
+      else{res=await supa.auth.signUp({email:email.trim(),password:pass,options:{emailRedirectTo:window.location.origin+window.location.pathname}});}
       if(res.error)throw new Error(res.error.message);
       if(mode==='register'&&!res.data.session){setInfo('Controlla la tua email e clicca il link di conferma.');setLoading(false);return;}
       onAuth(res.data.user,res.data.session);
@@ -3909,11 +3910,21 @@ function AuthScreen({onAuth}){
           </div>
           <div>
             <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Password</label>
-            <input class="inp" type="password" autocomplete=${mode==='login'?'current-password':'new-password'} placeholder=${mode==='register'?'Minimo 8 caratteri':'••••••••'} value=${pass} onInput=${e=>setPass(e.target.value)} onKeyDown=${e=>e.key==='Enter'&&submit()}/>
+            <div style="position:relative">
+              <input class="inp" type=${showPass?'text':'password'} autocomplete=${mode==='login'?'current-password':'new-password'} placeholder=${mode==='register'?'Minimo 8 caratteri':'••••••••'} value=${pass} onInput=${e=>setPass(e.target.value)} onKeyDown=${e=>e.key==='Enter'&&submit()} style="padding-right:38px"/>
+              <button type="button" onClick=${()=>setShowPass(v=>!v)} style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);font-size:16px;line-height:1" title=${showPass?'Nascondi password':'Mostra password'}>
+                ${showPass?html`<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`:html`<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`}
+              </button>
+            </div>
           </div>
           ${mode==='register'?html`<div>
             <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Conferma password</label>
-            <input class="inp" type="password" autocomplete="new-password" placeholder="Ripeti la password" value=${pass2} onInput=${e=>setPass2(e.target.value)} onKeyDown=${e=>e.key==='Enter'&&submit()}/>
+            <div style="position:relative">
+              <input class="inp" type=${showPass2?'text':'password'} autocomplete="new-password" placeholder="Ripeti la password" value=${pass2} onInput=${e=>setPass2(e.target.value)} onKeyDown=${e=>e.key==='Enter'&&submit()} style="padding-right:38px"/>
+              <button type="button" onClick=${()=>setShowPass2(v=>!v)} style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);font-size:16px;line-height:1" title=${showPass2?'Nascondi password':'Mostra password'}>
+                ${showPass2?html`<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`:html`<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`}
+              </button>
+            </div>
           </div>`:''}
         </div>
 
@@ -9395,6 +9406,20 @@ function App(){
   /* ── Auth init: getSession + onAuthStateChange + timeout sicurezza (splash infinito) ── */
   useEffect(()=>{
     if(!supa){setAuthLoading(false);return;}
+    /* PATCH v9.1 — gestione link conferma email (PKCE ?code= oppure hash #access_token=).
+       Supabase v2 detecta il token/code in URL automaticamente via detectSessionInUrl:true (default),
+       ma in alcuni browser il getSession() può tornare null se il code exchange è ancora in corso.
+       exchangeCodeForSession() è idempotente: se il code è già stato scambiato, ritorna la sessione. */
+    const _urlParams=new URLSearchParams(window.location.search);
+    const _authCode=_urlParams.get('code');
+    if(_authCode){
+      supa.auth.exchangeCodeForSession(_authCode).then(({data,error})=>{
+        if(!error&&data?.session){
+          // Pulisci l'URL senza ricaricare la pagina
+          try{history.replaceState(null,'',window.location.pathname);}catch{}
+        }
+      }).catch(()=>{});
+    }
     let cancelled=false;
     const AUTH_SAFETY_MS=20000;
     const endSplash=()=>{if(!cancelled)setAuthLoading(false);};
